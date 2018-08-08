@@ -11,8 +11,6 @@
 
 
 
-
-
 #include <iostream>
 #include <stdlib.h>
 #include <string>
@@ -229,7 +227,7 @@ int Map::Update_Map()
 		}
 		Rand_Food();														//产生新的食物
 	}
-	else if (map[head.x][head.y]!=' '&&!(head.x == tail.x && head.y == tail.y))     //判断蛇头不再空白区域并且不再蛇尾的位置，因为蛇尾已经前进了
+	else if (map[head.x][head.y]!=' '&&!(head.x == tail.x && head.y == tail.y))     //判断蛇头不再空白区域并且不在蛇尾的位置，因为蛇尾已经前进了
 		return 0;
 		
 	else {																	//没吃到食物
