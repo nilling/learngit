@@ -1,13 +1,12 @@
-/*
+//
+//
+//
+//	GAME  Ì°³ÔÉß
+//	AUTHOR  nil
+//	DATE  2018/8/8
+//
+//
 
-
-	GAME  è´ªåƒè›‡
-	AUTHOR  nil
-	DATE  2018/8/8
-
-
-
-*/
 
 
 
@@ -27,37 +26,258 @@
 #include <time.h>
 #include <windows.h>
 #include <conio.h>
+#include <deque>
 
-#define N 30                 //åœ°å›¾è¾¹é•¿
-#define Up 1				//ASCç  72
-#define Down 2				//ASCç  80
-#define Left 3				//ASCç  75
-#define Right 4				//ASCç  77
+#define N 30                 //µØÍ¼±ß³¤
+#define Up 1				//ASCÂë 72
+#define Down 2				//ASCÂë 80
+#define Left 3				//ASCÂë 75
+#define Right 4				//ASCÂë 77
 
 using namespace std;
 
 class Map
 {
 	private :
-		class snake{               //è›‡åæ ‡ç±»
+		class snake{               //Éß×ø±êÀà
 			public :
 			int x;
 			int y;
 			
 		};
-		class Food{               //é£Ÿç‰©åæ ‡ç±»
+		class Food{               //Ê³Îï×ø±êÀà
 			public:
 				int x;
 				int y;
 			
 		};
-		Food food;				//é£Ÿç‰©
-		snake head ,tail;		//è›‡å¤´ è›‡å°¾
+		Food food;				//Ê³Îï
+		snake head ,tail;		//ÉßÍ· ÉßÎ²
+		deque <int> direction;			//±£´æÃ¿´ÎÇ°½ø·½Ïò
+		int mod;						//ÓÎÏ·Ä£Ê½£¬ÆÕÍ¨Îª0£¬Ã°ÏÕÎª1
+		int score;						//ÓÎÏ··ÖÊı
+		int grade;						//ÓÎÏ·µÈ¼¶
+		int autoSpeed;					//ÓÎÏ·×Ô¶¯¸üĞÂËÙ¶È
+		char map[N][N];					//µØÍ¼
+		int opposite_direction[5]={0,80,72,77,75};						//±£´æ¸ö·½ÏòµÄ·½ÏòASCÂë
+		int speed[9] = {0,800,600,500,420,250,100,40,5};				//±£´æ¸÷¸öµÈ¼¶ËÙ¶ÈÖµ
+	public:
+	Map():head({N/2,N/2}),tail({N/2,N/2-2}),mod(0),score(0),grade(1),autoSpeed(speed[grade]){}
+	void Hello();
+	void Print_Hello(int);
+	void Start_Game();
+	void Initialize_Map();
+	int Update_Map();
+	void Show_Map();
+	void Rand_Food();
+	void Reset();
+		
 };
+
+void Map::Hello()
+{
+	while(true)
+	{
+		system("cls");
+		Print_Hello(mod);     
+		
+		if (_getch()!=13)      			//ÅĞ¶ÏÊÇ·ñÎª»Ø³µ¼ü£¬ÅĞ¶ÏÑ¡ÔñµÄÄ£Ê½
+		{
+			switch(_getch()){				//ÅĞ¶ÏÉÏÏÂÒÆ¶¯
+				case 80 : mod=1;break;
+				case 72 : mod=0;break;
+				
+			}
+			continue;
+		}
+		
+		if (mod==0)
+		{
+			do{
+				system("cls");
+				cout << "\n\n\n\n\t\t\t ÇëÊäÈëÓÎÏ·¼¶±ğ£¨1-8£©£º";
+				cin >> grade;
+			}while(grade>8||grade<1);
+			autoSpeed = speed[grade];       //¸üĞÂÓÎÏ·¼¶±ğËÙ¶È
+			break;
+		}
+		else break;
+	}
+	Start_Game();
+}
+
+void Map::Print_Hello(int mod)
+{
+	srand((unsigned)time(NULL));
+	cout<<"\n\n\n\t\t\t\t Ì°³ÔÉß \n\n\n\n";
+	cout<< "\t\t\t  ÇëÑ¡ÔñÄãµÄÄ£Ê½£º";
+	cout << "\n\n\t\t\t     ÆÕÍ¨Ä£Ê½";
+	if(mod==0) cout << "  *";
+	cout << "\n\n\t\t\t     Ã°ÏÕÄ£Ê½";
+	if (mod==1) cout << "  *";
+	cout << "\n\n\n\n\n\n\n\n  °æ±¾V1.0      \t\t\t\t×÷Õß£ºnil"; 
+}
+
+void Map::Start_Game()
+{
+	char choose;
+	Initialize_Map();  //³õÊ¼»¯µØÍ¼
+	Rand_Food();
+	do{								//½øĞĞÓÎÏ·
+		Show_Map();
+	}while(Update_Map());
+	cout << "\t\t Game Over!  Äã»¹¼ÌĞøÂğ£¿£¨Y»òÆäËü½¨£©:";
+	cin >> choose;
+	if(choose=='y'||choose=='Y')  //ÖØĞÂ¿ªÊ¼
+	{
+		Reset();
+		Hello();
+	}
+}
+
+void Map::Initialize_Map()   
+{
+	for (int i = 0;i < N;i++)                       //´òÓ¡±ß½ç
+		{
+			map[0][i] = map[N-1][i] = '*';
+			map[i][0] = map[i][N-1] = '*';
+		}
+	for (int i = 1;i < N-1;i++)                    //´òÓ¡ÖĞ¼äµÄ¿Õ°×
+		for (int j =1;j <N-1;j++ )
+			map[i][j]=' ';
+		
+	map[N/2][N/2] = '@';
+	map[N/2][N/2-1] = map[N/2][N/2-2] = '.';
+	direction.push_front(Right);                  //ÉßÎ²ĞèÒªÁ½¸öÏòÓÒ²ÅÄÜµ½´ïÉßÍ·£¬ËùÒÔĞèÒªpushÁ½´Î
+	direction.push_front(Right);
+	
+	
+}
+
+void Map::Show_Map()       	//´òÓ¡
+{
+	
+	system("cls");
+	for (int i = 0; i<N;i++)
+	{
+		cout<<"\t";
+		for (int j=0;j<N;j++)
+			cout << map[i][j]<<' ';
+		if(i == N/4)
+			cout << "\t Score: " << score;
+		if(i == N / 4 + 4)
+			cout << "\t grade: " << grade;
+		if(i == N / 4 + 8)
+			cout << "°´¿Õ¸ñ¼üÔİÍ£/¼ÌĞø";
+		cout << endl;
+	}
+}
+
+int Map::Update_Map()
+{
+	
+	int tmp_direction,tmp_others,sign=0;
+	double start_time = (double)clock() / CLOCKS_PER_SEC;         		//¼ÇÂ¼¿ªÊ¼Ê±¼ä
+	
+	do{
+		if(_kbhit()){                									//ÅĞ¶ÏÊÇ·ñÓĞ¼üÅÌÊäÈëµ«²»¶ÁÈë
+			tmp_others = _getch();
+			if(tmp_others == 32)                                        //ÅĞ¶ÏÊÇ·ñÎª¿Õ¸ñ
+				while(_getch() != 32);
+			else if (tmp_others == 224)                       			 //ÉÏÏÂ×óÓÒASCÂëÓĞÁ½Î»¡£µÚÒ»Î»¶¼ÊÇ224
+			{
+				tmp_direction = _getch();
+				if(opposite_direction[direction.front()] == tmp_direction)                     //ÅĞ¶ÏÊÇ·ñÎª·´·½Ïò£¬·´·½ÏòÎŞĞ§
+					continue;
+				switch (tmp_direction){
+					case 72: direction.push_front(Up); sign=1; break;
+					case 80: direction.push_front(Down); sign=1; break;
+					case 75: direction.push_front(Left); sign=1; break;
+					case 77: direction.push_front(Right); sign=1; break;
+				}
+				if (sign )break;
+			}
+			
+		}
+		if ((double)clock() / CLOCKS_PER_SEC - start_time > autoSpeed / 1000.0)                    //³¬¹ı×Ô¶¯¸üĞÂÊ±¼äÔò×Ô¶¯¸üĞÂÉßµÄÎ»ÖÃ
+		{
+			direction.push_front(direction.front());
+			break;
+		}
+	}while(true);
+	
+	map[head.x][head.y] = '.';
+	switch (direction.front()){
+		case Up: head.x -= 1; break;
+		case Down: head.x += 1; break;
+		case Left: head.y -=1; break;
+		case Right: head.y +=1; break;
+	}
+	
+	
+	if (head.x == food.x && head.y == food.y){  							//Èç¹û³Ôµ½Ê³Îï
+		map[head.x][head.y] = '@';
+		score += 10;
+		if(mod == 1){
+			if(score / 60 >= grade)											//Ã¿³Ô6¸öÊ³Îï¼ÓÒ»¸öµÈ¼¶£¬×î¸ßÎª5¼¶
+			{
+				if(grade < 5){
+					grade++;
+					autoSpeed = speed[grade];								//¸üĞÂÉßµÄËÙ¶È
+				}
+			}
+		}
+		Rand_Food();														//²úÉúĞÂµÄÊ³Îï
+	}
+	else if (map[head.x][head.y]!=' '&&!(head.x == tail.x && head.y == tail.y))     //ÅĞ¶ÏÉßÍ·²»ÔÙ¿Õ°×ÇøÓò²¢ÇÒ²»ÔÙÉßÎ²µÄÎ»ÖÃ£¬ÒòÎªÉßÎ²ÒÑ¾­Ç°½øÁË
+		return 0;
+		
+	else {																	//Ã»³Ôµ½Ê³Îï
+		map[tail.x][tail.y] = ' ';
+		map[head.x][head.y] = '@';
+		switch(direction.back()){						//¸üĞÂÉßÎ²×ø±ê
+			case Up: tail.x -= 1; break;
+			case Down: tail.x +=1; break;
+			case Left: tail.y -= 1; break;
+			case Right: tail.y +=1; break;
+		}
+		direction.pop_back();                      //µ¯³ö×îºóÒ»¸öÉßÎ²×ø±ê
+	}
+	return 1;
+}
+
+void Map::Rand_Food()
+{
+	do{
+		food.x = rand() % (N-2) + 1;
+		food.y = rand() % (N-2) + 1;
+	}while(map[food.x][food.y]!=' ');
+	
+	map[food.x][food.y] = '#';
+}
+
+void Map::Reset()        //ÖØÖÃÓÎÏ·
+{
+	Initialize_Map();
+	head = {N / 2,N / 2};
+	tail = {N / 2,N / 2 - 2};
+	mod = 0;
+	score = 0;
+	grade = 1;
+	autoSpeed = 800;
+	direction.clear();
+} 
 
 int main()
 {
+	HANDLE hdle = GetStdHandle(STD_OUTPUT_HANDLE);			//Òş²Ø¹â±êµÄ·½·¨
+	CONSOLE_CURSOR_INFO CursorInfo;
+	GetConsoleCursorInfo(hdle,&CursorInfo);
+	CursorInfo.bVisible = false;
+	SetConsoleCursorInfo(hdle,&CursorInfo);
 	
+	Map m;
+	m.Hello();
 	
 	return 0;
 }
